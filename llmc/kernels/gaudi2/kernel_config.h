@@ -27,6 +27,8 @@ typedef float                       SCALAR;
 #define exp(a)                      exp_f32(a)
 #define min(a, b)                   s_f32_min(a, b)
 #define V_LANE_ID                   read_lane_id_4b_b()
+#define sqrt(a)                     v_rsqrt_f32(a)
+#define add(a, b)                   s_f32_add(a, b)
 #define v_sel_leq_v_v_v_v(a, b, c, d) v_f32_sel_leq_f32_b(a, b, c, d)
 
 #endif
