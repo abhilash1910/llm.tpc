@@ -53,12 +53,12 @@ void main(tensor out, tensor mean, tensor rstd, tensor inp,
                           v_ld_tnsr_partial_i(bias, ifmCoords, c * VECTOR_SIZE + i);
 
                 // Store results to out tensor
-                v_st_tnsr_i(out, ifmCoords, c * VECTOR_SIZE + i, o);
+                st_tnsr_i_v(out, ifmCoords, c * VECTOR_SIZE + i, o);
             }
 
             // Cache the mean and rstd for the backward pass later
-            v_st_tnsr_i(mean, ifmCoords, c / VECTOR_SIZE, m);
-            v_st_tnsr_i(rstd, ifmCoords, c / VECTOR_SIZE, s);
+            st_tnsr_i_v(mean, ifmCoords, c / VECTOR_SIZE, m);
+            st_tnsr_i_v(rstd, ifmCoords, c / VECTOR_SIZE, s);
         }
      }    
           

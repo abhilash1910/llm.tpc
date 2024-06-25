@@ -2,6 +2,7 @@
 #define VECTOR                      float64
 #define VECTOR_SIZE                 64
 typedef float                       SCALAR;
+#define floatX                      floatX; 
 #define v_ld_tnsr_i(a,b)            v_f32_ld_tnsr_b(a,b)
 #define v_ld_tnsr_partial_i(a,b, c, d)    v_f32_ld_tnsr_partial_b(a, b, c, d)
 #define v_reduce_max(a)             v_f32_reduce_max(a)
