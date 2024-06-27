@@ -168,20 +168,3 @@ void main(tensor dwte, tensor dwpe, tensor dout, tensor inp,
     encoder_backward_naive(dwte, dwpe, dout, inp, B, T, C);      
           
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
