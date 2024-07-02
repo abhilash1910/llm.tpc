@@ -5,24 +5,25 @@
 #include "gelu_fwd.hpp"
 #include "common_utils.hpp"
 
-extern unsigned char _binary___gelu_fwd_o_start;
-extern unsigned char _binary___gelu_fwd_o_end;
+extern unsigned char _binary___global_norm_o_start;
+extern unsigned char _binary___global_norm_o_end;
 
- tpc_lib_api::GlueCodeReturn gelu_fwd::GetKernelName(
+ tpc_lib_api::GlueCodeReturn global_norm::GetKernelName(
              char kernelName [tpc_lib_api::MAX_NODE_NAME])
  {
-     strcpy(kernelName,"custom_gelu_fwd");
+     strcpy(kernelName,"custom_global_norm");
      return tpc_lib_api::GLUE_SUCCESS;
  }
 
 
-tpc_lib_api::GlueCodeReturn AddF32Gaudi2::GetGcDefinitions(
+tpc_lib_api::GlueCodeReturn global_norm::GetGcDefinitions(
             tpc_lib_api::HabanaKernelParams* in_defs,
             tpc_lib_api::HabanaKernelInstantiation* out_defs)
 {
     tpc_lib_api::GlueCodeReturn retVal;
     const int c_unrollCount = 4;
-
+    global_norm* call_params = static_cast<global_norm*>(in_defs->nodeParams.nodeParams);
+    
     /*************************************************************************************
     *   Stage I - validate input
     **************************************************************************************/
@@ -55,7 +56,7 @@ tpc_lib_api::GlueCodeReturn AddF32Gaudi2::GetGcDefinitions(
     uint64_t outputSizes[gcapi::MAX_TENSOR_DIM];
     uint64_t* indexSpaceSizes         = in_defs->inputTensors[0].geometry.maxSizes;
     outputSizes[0] = indexSpaceSizes[0];
-    
+    //uint64_t outputSizes[gcapi::MAX_TENSOR_DIM] = {0};
     //memcpy(outputSizes, in_defs->inputTensors[0].geometry.maxSizes, sizeof(outputSizes));
 
     //round up to elementsInVec and divide by elementsInVec.
@@ -63,38 +64,37 @@ tpc_lib_api::GlueCodeReturn AddF32Gaudi2::GetGcDefinitions(
     unsigned depthIndex = VECTOR_SIZE;
     out_defs->indexSpaceRank = 1;
     out_defs->indexSpaceGeometry[0] = depthIndex;
-	
+	  unsigned elementsInVec = 64;
     /*************************************************************************************
     *    Stage III -  Define index space mapping
     **************************************************************************************/
 
-     for (unsigned i = 0; i < in_defs->inputTensorNr; i++)
-    {
-        for (unsigned j = 0; j < out_defs->indexSpaceRank; j++)
-        {
-            out_defs->inputTensorAccessPattern[i].mapping[j].indexSpaceDim     = 0;
-            out_defs->inputTensorAccessPattern[i].mapping[j].a = 0;
-            out_defs->inputTensorAccessPattern[i].mapping[j].start_b = 0;
-            out_defs->inputTensorAccessPattern[i].mapping[j].end_b   = 0;
+    for(unsigned int i = 0;i < in_defs->inputTensorNr; i++) {
+            //out_defs->inputTensorAccessPattern[ii].allRequired = true;
+            out_defs->inputTensorAccessPattern[i].mapping[0].indexSpaceDim      = 0;
+            out_defs->inputTensorAccessPattern[i].mapping[0].a        = 0;
+            out_defs->inputTensorAccessPattern[i].mapping[0].start_b  = 0;
+            out_defs->inputTensorAccessPattern[i].mapping[0].end_b    = elementsInVec - 1;
         }
-    }
-    for (unsigned int i = 0; i < out_defs->indexSpaceRank; i++)
-    {
-        out_defs->outputTensorAccessPattern[0].mapping[i].indexSpaceDim     = i;
-        out_defs->outputTensorAccessPattern[0].mapping[i].a = 0;
-        out_defs->outputTensorAccessPattern[0].mapping[i].start_b = 0;
-        out_defs->outputTensorAccessPattern[0].mapping[i].end_b   = 0;
-    }
+     
+    out_defs->outputTensorAccessPattern[0].mapping[0].indexSpaceDim  = 0;
+    out_defs->outputTensorAccessPattern[0].mapping[0].a        = elementsInVec;
+    out_defs->outputTensorAccessPattern[0].mapping[0].start_b  = 0;
+    out_defs->outputTensorAccessPattern[0].mapping[0].end_b    = elementsInVec - 1;
+
     
     /*************************************************************************************
     *    Stage IV -  define scalar parameters
     **************************************************************************************/
-    out_defs->kernel.paramsNr =0;
+    
+    out_defs->kernel.paramsNr =1;
+    out_defs->kernel.scalarParams[0] = static_cast<uint32_t>(call_params->count);
+    
 
     /*************************************************************************************
     *    Stage V -  Load ISA into the descriptor.
     **************************************************************************************/
-    unsigned IsaSize = (&_binary___gelu_fwd_o_end - &_binary___gelu_fwd_o_start);
+    unsigned IsaSize = (&_binary___global_norm_o_end - &_binary___global_norm_o_start);
     unsigned givenBinarySize = out_defs->kernel.elfSize;
     out_defs->kernel.elfSize = IsaSize;
 
@@ -102,7 +102,7 @@ tpc_lib_api::GlueCodeReturn AddF32Gaudi2::GetGcDefinitions(
     {
         // copy binary out
         memcpy (out_defs->kernel.kernelElf,
-                &_binary___gelu_fwd_o_start,
+                &_binary___global_norm_o_start,
                 IsaSize);
     }
     else

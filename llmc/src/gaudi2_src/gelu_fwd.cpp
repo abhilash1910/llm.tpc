@@ -16,7 +16,7 @@ extern unsigned char _binary___gelu_fwd_o_end;
  }
 
 
-tpc_lib_api::GlueCodeReturn AddF32Gaudi2::GetGcDefinitions(
+tpc_lib_api::GlueCodeReturn gelu_fwd::GetGcDefinitions(
             tpc_lib_api::HabanaKernelParams* in_defs,
             tpc_lib_api::HabanaKernelInstantiation* out_defs)
 {
@@ -59,32 +59,27 @@ tpc_lib_api::GlueCodeReturn AddF32Gaudi2::GetGcDefinitions(
     //memcpy(outputSizes, in_defs->inputTensors[0].geometry.maxSizes, sizeof(outputSizes));
 
     //round up to elementsInVec and divide by elementsInVec.
+    unsigned elementsInVec = 64;
     //unsigned depthIndex = (outputSizes[0] + 63) / 64;
     unsigned depthIndex = VECTOR_SIZE;
     out_defs->indexSpaceRank = 1;
     out_defs->indexSpaceGeometry[0] = depthIndex;
+    
 	
     /*************************************************************************************
     *    Stage III -  Define index space mapping
     **************************************************************************************/
 
-     for (unsigned i = 0; i < in_defs->inputTensorNr; i++)
-    {
-        for (unsigned j = 0; j < out_defs->indexSpaceRank; j++)
-        {
-            out_defs->inputTensorAccessPattern[i].mapping[j].indexSpaceDim     = 0;
-            out_defs->inputTensorAccessPattern[i].mapping[j].a = 0;
-            out_defs->inputTensorAccessPattern[i].mapping[j].start_b = 0;
-            out_defs->inputTensorAccessPattern[i].mapping[j].end_b   = 0;
-        }
-    }
-    for (unsigned int i = 0; i < out_defs->indexSpaceRank; i++)
-    {
-        out_defs->outputTensorAccessPattern[0].mapping[i].indexSpaceDim     = i;
-        out_defs->outputTensorAccessPattern[0].mapping[i].a = 0;
-        out_defs->outputTensorAccessPattern[0].mapping[i].start_b = 0;
-        out_defs->outputTensorAccessPattern[0].mapping[i].end_b   = 0;
-    }
+    out_defs->inputTensorAccessPattern[0].mapping[0].indexSpaceDim      = 0;
+    out_defs->inputTensorAccessPattern[0].mapping[0].a        = elementsInVec;
+    out_defs->inputTensorAccessPattern[0].mapping[0].start_b  = 0;
+    out_defs->inputTensorAccessPattern[0].mapping[0].end_b    = elementsInVec - 1;
+
+    out_defs->outputTensorAccessPattern[0].mapping[0].indexSpaceDim  = 0;
+    out_defs->outputTensorAccessPattern[0].mapping[0].a        = elementsInVec;
+    out_defs->outputTensorAccessPattern[0].mapping[0].start_b  = 0;
+    out_defs->outputTensorAccessPattern[0].mapping[0].end_b    = elementsInVec - 1;
+
     
     /*************************************************************************************
     *    Stage IV -  define scalar parameters
