@@ -56,7 +56,7 @@ Make sure your Habana tools are installed, check the /usr/bin/tpc-clang and Cmak
 
 Clone the repository
 ```  
- git clone https://github.com/intel-sandbox/llm.tpc.git
+ git clone https://github.com/abhilash1910/llm.tpc.git
 ``` 
 In the terminal, make sure you are in the project root directory, then create a directory called build
 ```  
