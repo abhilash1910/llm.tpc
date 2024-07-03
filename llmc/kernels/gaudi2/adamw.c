@@ -8,11 +8,7 @@ void main(tensor params_memory, tensor grads_memory, tensor m_memory, tensor v_m
           float grad_scale, unsigned int seed) 
 {
   const int depth = 0;
-  const int width = 1;
-  const int height = 2;
-  const int batch = 3;
- 
-
+  
   const int5 indexSpaceStart = get_index_space_offset();
   const int5 indexSpaceEnd = get_index_space_size() + indexSpaceStart;
 
@@ -23,21 +19,6 @@ void main(tensor params_memory, tensor grads_memory, tensor m_memory, tensor v_m
   const int depthStart = indexSpaceStart[depth] * depthStep;
   const int depthEnd = indexSpaceEnd[depth] * depthStep;
 
-  // WIDTH
-  const int widthStep = 4;
-  const int widthStart = indexSpaceStart[width] * widthStep;
-  const int widthEnd = indexSpaceEnd[width] * widthStep;
-
-  // HEIGHT
-  const int heightStep = 1;
-  const int heightStart = indexSpaceStart[height];
-  const int heightEnd = indexSpaceEnd[height];
-
-  // BATCH
-  const int batchStep = 1;
-  const int batchStart = indexSpaceStart[batch];
-  const int batchEnd = indexSpaceEnd[batch];
-
   
   VECTOR p, g, m_t, v_t;
   VECTOR m_t_out, v_t_out, p_out;
@@ -45,28 +26,12 @@ void main(tensor params_memory, tensor grads_memory, tensor m_memory, tensor v_m
 
 #pragma loop_taken
   for (int d = depthStart; d < depthEnd; d += depthStep) {
-    coords[depth] = d;
-
- 
-    #pragma loop_taken
-      for (int b = batchStart; b < batchEnd; b += batchStep) {
-        coords[batch] = b;
-
-      #pragma loop_taken
-        for (int h = heightStart; h < heightEnd; h += heightStep) {
-          coords[height] = h;
-
-      #pragma loop_taken
-      #pragma unroll 4
-          for (int w = widthStart; w < widthEnd; w += 1) {
-            coords[width] = w;
-
+            coords[depth] = d;
             // Load values from tensors
             p = v_ld_tnsr_i(coords, params_memory);
             g = v_ld_tnsr_i(coords, grads_memory);
             m_t = v_ld_tnsr_i(coords, m_memory);
             v_t = v_ld_tnsr_i(coords, v_memory);
-
             // Scale gradient
             g *= grad_scale;
 
@@ -100,8 +65,4 @@ void main(tensor params_memory, tensor grads_memory, tensor m_memory, tensor v_m
                 st_tnsr_i_v(coords, master_params_memory, p_out);
             }
           }
-        }
-      
-    }
-  }
 }
