@@ -1,8 +1,10 @@
 #if defined(FLOAT32)
-#define VECTOR                      float64
+#define M_PI 3.14f
+#define GELU_SCALING_FACTOR v_rsqrt_f32(2.0f / M_PI)
+#define VECTOR                      float
 #define VECTOR_SIZE                 64
 typedef float                       SCALAR;
-#define floatX                      floatX; 
+#define floatX                      float; 
 #define v_ld_tnsr_i(a,b)            v_f32_ld_tnsr_b(a,b)
 #define v_ld_tnsr_partial_i(a,b, c, d)    v_f32_ld_tnsr_partial_b(a, b, c, d)
 #define v_reduce_max(a)             v_f32_reduce_max(a)

@@ -1,5 +1,9 @@
 #include "kernel_config.h"
+#define M_PI 3.141
 #define GELU_SCALING_FACTOR v_rsqrt_f32(2.0f / M_PI)
+#define VECTOR float64
+#define VECTOR_SIZE 64
+#define floatX float64
 
 void main(tensor out, const tensor in){
 
@@ -20,18 +24,19 @@ void main(tensor out, const tensor in){
   #pragma loop taken
   for(int d = depthStart; d< depthEnd; d++){
   
-    packed_inp = v_ld_tnsr_i(ifmCoords, in);
+    
     
     #pragma loop taken
     for(int k =0; k < VECTOR_SIZE ; k++){
     
-      float xi = (float)packed_inp[k];
-      float cube = 0.044715f * xi * xi * xi;
-      packed_out[k] = (floatX)(0.5f * xi * (1.0f + tanhf(GELU_SCALING_FACTOR * (xi + cube)))); 
+      packed_inp = v_f32_ld_tnsr_b(ifmCoords, in);
+      float64 xi = packed_inp;
+      float64 cube = 0.044715f * xi * xi * xi;
+      packed_out = (floatX)(0.5f * xi * (1.0f + v_f32_calc_fp_special_b(GELU_SCALING_FACTOR * (xi + cube), 0, SW_TANH, 1))); 
     
     }
     
-  st_tnsr_i_v(ifmCoords, output, packed_out);
+  v_f32_st_tnsr(ifmCoords, out, packed_out);
   
   }
 

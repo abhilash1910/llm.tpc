@@ -1,4 +1,5 @@
 #include "kernel_config.h"
+#define VECTOR_SIZE 64
 
 void main(tensor out, tensor inp, tensor weight, tensor bias, int B, int T, int C, int OC) {
     int BT = B * T;
@@ -22,23 +23,26 @@ void main(tensor out, tensor inp, tensor weight, tensor bias, int B, int T, int 
         
         if (bt < BT && oc < OC) {
             float val = 0.0f;
-            if (bias != NULL) {
-                v_ld_tnsr_partial_i(&val, bias, ifmCoords, oc);
+            if (!bias) {
+                v_f32_ld_tnsr_partial_b(ifmCoords, &val, bias, oc);
             }
 
             for (int k = 0; k < VECTOR_SIZE; k++) {
-                float wrow[C];
-                v_ld_tnsr_partial_i(wrow, weight, ifmCoords, oc * C + k);
-
-                float inp_bt[C];
-                v_ld_tnsr_partial_i(inp_bt, inp, ifmCoords, bt * C + k);
+                float wrow[1024];
+                //float *wrow = (float *)malloc(C * sizeof(float));
+                
+                v_f32_ld_tnsr_partial_b(ifmCoords,wrow, weight, oc * C + k);
+                
+                float inp_bt[1024];
+                //float *inp_bt = (float*)malloc(C * sizeof(float));
+                v_f32_ld_tnsr_partial_b(ifmCoords, inp_bt, inp,  bt * C + k);
 
                 for (int i = 0; i < C; i++) {
                     val += inp_bt[i] * wrow[i];
                 }
             }
 
-            v_st_tnsr_partial_i(out, ifmCoords, bt * OC + oc, val);
+            v_f32_ld_tnsr_partial_b(ifmCoords, out, bt * OC + oc, val);
         }
     }
 }
